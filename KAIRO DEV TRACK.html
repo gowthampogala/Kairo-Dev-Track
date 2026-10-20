@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>KAIRO DEV TRACK — Midnight Precision Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Linear Style Reference: Midnight Precision Instrument */
+      --color-void: #08090a;
+      --color-carbon: #0f1011;
+      --color-obsidian: #161718;
+      --color-graphite: #23252a;
+      --color-smoke: #383b3f;
+      --color-ash: #62666d;
+      --color-fog: #8a8f98;
+      --color-mist: #d0d6e0;
+      --color-bone: #e5e5e6;
+      --color-paper: #ffffff;
+      --color-acid-lime: #e4f222;
+      --color-pulse-green: #27a644;
+      --color-coral-red: #eb5757;
+      --color-signal-teal: #02b8cc;
+      --color-iris-violet: #6366f1;
+      --color-lavender: #8b5cf6;
+
+      /* Surfaces */
+      --surface-void: #08090a;
+      --surface-carbon: #0f1011;
+      --surface-obsidian: #161718;
+      --surface-slate: #23252a;
+      --surface-hover: rgba(255, 255, 255, 0.035);
+      --surface-active: rgba(255, 255, 255, 0.06);
+
+      /* Typography */
+      --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Berkeley Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Spacing */
+      --spacing-4: 4px;
+      --spacing-8: 8px;
+      --spacing-12: 12px;
+      --spacing-16: 16px;
+      --spacing-20: 20px;
+      --spacing-24: 24px;
+      --spacing-32: 32px;
+
+      /* Border Radii (strictly 2px, 4px, 6px, 12px, 9999px) */
+      --radius-sm: 2px;
+      --radius-badges: 4px;
+      --radius-buttons: 6px;
+      --radius-inputs: 6px;
+      --radius-cards: 12px;
+      --radius-pills: 9999px;
+
+      /* Shadows & Elevation */
+      --shadow-sm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
+      --shadow-subtle: rgb(35, 37, 42) 0px 0px 0px 1px inset;
+      --shadow-cta: rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px, rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
+    }
+
+    :root[data-theme="light"] {
+      --color-void: #f7f7f8;
+      --color-carbon: #ffffff;
+      --color-obsidian: #f0f0f2;
+      --color-graphite: #e2e4e8;
+      --color-smoke: #caced4;
+      --color-ash: #8a8f98;
+      --color-fog: #62666d;
+      --color-mist: #23252a;
+      --color-bone: #161718;
+      --color-paper: #08090a;
+      --surface-void: #f7f7f8;
+      --surface-carbon: #ffffff;
+      --surface-obsidian: #f0f0f2;
+      --surface-slate: #e2e4e8;
+      --surface-hover: rgba(0, 0, 0, 0.035);
+      --surface-active: rgba(0, 0, 0, 0.06);
+      --shadow-subtle: rgb(226, 228, 232) 0px 0px 0px 1px inset;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--color-void);
+      color: var(--color-mist);
+      font-family: var(--font-inter);
+      font-size: 14px;
+      line-height: 1.5;
+      letter-spacing: -0.011em;
+      font-feature-settings: "cv01" on, "ss03" on, "zero" on;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0 0 auto;
+      height: env(safe-area-inset-top, 0px);
+      background: var(--color-void);
+      z-index: 30;
+    }
+
+    h1, h2, h3 {
+      color: var(--color-paper);
+      font-weight: 510;
+      letter-spacing: -0.022em;
+    }
+
+    h1 {
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    h2 {
+      font-size: 16px;
+      letter-spacing: -0.012em;
+    }
+
+    .mono, .m {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-fog);
+      letter-spacing: -0.013em;
+    }
+
+    .tab-num {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 248px;
+      background: var(--color-carbon);
+      border-right: 1px solid var(--color-graphite);
+      padding: calc(16px + env(safe-area-inset-top, 0px)) 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      z-index: 20;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .logo {
+      color: var(--color-paper);
+      font-weight: 510;
+      font-size: 14px;
+      letter-spacing: -0.012em;
+      padding: 6px 10px 18px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      user-select: none;
+    }
+
+    .logo-glyph {
+      width: 16px;
+      height: 16px;
+      background: #1a1b1d;
+      border: 1px solid var(--color-graphite);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-glyph::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--color-acid-lime);
+      border-radius: 1.5px;
+      box-shadow: 0 0 6px rgba(228, 242, 34, 0.6);
+    }
+
+    .nv {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      background: transparent;
+      border: 0;
+      color: var(--color-mist);
+      padding: 8px 12px;
+      border-radius: var(--radius-buttons);
+      font-family: var(--font-inter);
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: left;
+      position: relative;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+
+    .nv:hover {
+      background: var(--surface-hover);
+      color: var(--color-paper);
+    }
+
+    .nv.on {
+      background: var(--surface-active);
+      color: var(--color-paper);
+      font-weight: 510;
+    }
+
+    .nv.on::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      border-radius: 0 2px 2px 0;
+      background: var(--color-acid-lime);
+    }
+
+    .sp {
+      flex: 1;
+    }
+
+    .sidebar-widget {
+      border: 1px solid var(--color-graphite);
+      border-radius: var(--radius-buttons);
+      padding: 12px 14px;
+      background: var(--color-obsidian);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Main Content Area */
+    main {
+      margin-left: 248px;
+      padding: calc(36px + env(safe-area-inset-top, 0px)) 36px 72px;
+      max-width: 1200px;
+      box-sizing: border-box;
+    }
+
+    .top-bar {
+      display: none;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: none;
+    }
+
+    /* Precision Cards */
+    .card {
+      background: var(--color-carbon);
+      border-radius: var(--radius-cards);
+      box-shadow: inset 0 0 0 1px var(--color-graphite);
+      padding: 24px;
+      transition: box-shadow 0.15s ease;
+    }
+
+    .card:hover {
+      box-shadow: inset 0 0 0 1px var(--color-smoke);
+    }
+
+    .g {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin: 20px 0;
+    }
+
+    .lb {
+      font-size: 12px;
+      color: var(--color-fog);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      font-feature-settings: "cv01" on;
+    }
+
+    .big {
+      font-size: 28px;
+      color: var(--color-paper);
+      font-weight: 510;
+      letter-spacing: -0.022em;
+      margin: 4px 0 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sub {
+      color: var(--color-fog);
+      margin: 4px 0 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .bar {
+      height: 4px;
+      background: var(--color-graphite);
+      border-radius: var(--radius-pills);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .bar b {
+      display: block;
+      height: 100%;
+      background: var(--color-pulse-green);
+      border-radius: var(--radius-pills);
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Buttons */
+    button, input, select, textarea {
+      font: inherit;
+      color: var(--color-mist);
+    }
+
+    .bt {
+      background: transparent;
+      border: 1px solid var(--color-graphite);
+      border-radius: var(--radius-buttons);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+
+    .bt:hover {
+      background: var(--surface-hover);
+      border-color: var(--color-smoke);
+      color: var(--color-paper);
+    }
+
+    /* Primary Action CTA — Exclusive Acid Lime Flashlight */
+    .pr {
+      background: var(--color-acid-lime);
+      color: #08090a;
+      border-color: var(--color-acid-lime);
+      font-weight: 510;
+      font-size: 14px;
+      padding: 10px 18px;
+      letter-spacing: -0.011em;
+      box-shadow: var(--shadow-cta);
+    }
+
+    .pr:hover {
+      background: var(--color-acid-lime);
+      filter: brightness(0.93);
+      color: #08090a;
+    }
+
+    .pr:active {
+      transform: scale(0.99);
+    }
+
+    .dg {
+      color: var(--color-coral-red);
+      border-color: rgba(235, 87, 87, 0.3);
+    }
+
+    .dg:hover {
+      background: rgba(235, 87, 87, 0.1);
+      border-color: var(--color-coral-red);
+      color: var(--color-coral-red);
+    }
+
+    /* Precision Form Controls */
+    input[type="text"], input[type="url"], input[type="date"], input[type="number"], select, textarea {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-inputs);
+      padding: 9px 12px;
+      width: 100%;
+      color: var(--color-mist);
+      font-size: 13px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    :root[data-theme="light"] input, :root[data-theme="light"] select, :root[data-theme="light"] textarea {
+      background: #ffffff;
+      border-color: var(--color-graphite);
+    }
+
+    textarea {
+      min-height: 74px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--color-mist);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    /* Precision Checkboxes */
+    input[type="checkbox"] {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--color-smoke);
+      border-radius: 4px;
+      background: transparent;
+      margin: 3px 0 0;
+      flex: none;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.12s ease;
+    }
+
+    input[type="checkbox"]:hover {
+      border-color: var(--color-mist);
+    }
+
+    input[type="checkbox"]:checked {
+      background-color: var(--color-pulse-green) !important;
+      border-color: var(--color-pulse-green) !important;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E") !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      background-size: 11px 11px !important;
+    }
+
+    /* Rows & Lists */
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 6px;
+      border-bottom: 1px solid var(--color-graphite);
+      transition: background 0.12s ease;
+    }
+
+    .row:hover {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .row:last-child {
+      border: 0;
+    }
+
+    .row label {
+      flex: 1;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--color-mist);
+      line-height: 1.5;
+    }
+
+    .row.d label {
+      color: var(--color-ash);
+      text-decoration: line-through;
+    }
+
+    /* Linear Style Reference: Chromatic Badges */
+    .bg {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: var(--radius-badges);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--color-fog);
+      border: 1px solid var(--color-graphite);
+    }
+
+    .bg.gr, .bg-test {
+      background: rgba(39, 166, 68, 0.08);
+      color: var(--color-pulse-green);
+      border-color: rgba(39, 166, 68, 0.25);
+    }
+
+    .bg-learn {
+      background: rgba(2, 184, 204, 0.08);
+      color: var(--color-signal-teal);
+      border-color: rgba(2, 184, 204, 0.25);
+    }
+
+    .bg-build {
+      background: rgba(228, 242, 34, 0.08);
+      color: var(--color-acid-lime);
+      border-color: rgba(228, 242, 34, 0.25);
+    }
+
+    .bg-practise {
+      background: rgba(99, 102, 241, 0.08);
+      color: var(--color-iris-violet);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    .bg-review {
+      background: rgba(139, 92, 246, 0.08);
+      color: var(--color-lavender);
+      border-color: rgba(139, 92, 246, 0.25);
+    }
+
+    .flt {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+    }
+
+    .flt > * {
+      width: auto;
+      flex: 1 1 140px;
+    }
+
+    .hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .acc {
+      width: 100%;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: none;
+      border: 0;
+      padding: 12px 6px;
+      cursor: pointer;
+      text-align: left;
+      color: var(--color-paper);
+      font-size: 14px;
+      border-radius: var(--radius-buttons);
+      transition: background 0.12s ease;
+    }
+
+    .acc:hover {
+      background: var(--surface-hover);
+    }
+
+    .acc svg {
+      transition: transform 0.15s ease;
+      color: var(--color-fog);
+    }
+
+    .acc.o svg {
+      transform: rotate(90deg);
+      color: var(--color-paper);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    .tb {
+      min-width: 36px;
+      justify-content: center;
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .tb.on {
+      background: var(--color-bone);
+      color: #08090a;
+      border-color: var(--color-paper);
+      font-weight: 510;
+    }
+
+    .f {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .cols {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .st {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Last 7 Days Activity Graph */
+    .act {
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
+      height: 52px;
+      margin-top: 10px;
+      padding-top: 4px;
+    }
+
+    .act-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+    }
+
+    .act-col div {
+      width: 100%;
+      background: var(--color-smoke);
+      border-radius: 2px;
+      min-height: 3px;
+      transition: height 0.25s ease, background 0.15s ease;
+    }
+
+    .act-col:hover div {
+      background: var(--color-acid-lime);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 820px) {
+      aside {
+        transform: translateX(-100%);
+      }
+      aside.o {
+        transform: translateX(0);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.85);
+      }
+      main {
+        margin-left: 0;
+        padding: calc(64px + env(safe-area-inset-top, 0px)) 16px 48px;
+      }
+      .top-bar {
+        display: flex;
+        position: fixed;
+        top: env(safe-area-inset-top, 0px);
+        left: 0;
+        right: 0;
+        height: 50px;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        background: var(--color-carbon);
+        border-bottom: 1px solid var(--color-graphite);
+        z-index: 15;
+        color: var(--color-paper);
+      }
+      .top-bar button {
+        background: none;
+        border: 0;
+        color: var(--color-paper);
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Mobile Top Bar -->
+  <div class="top-bar">
+    <button data-a="menu" aria-label="Open menu">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span style="font-weight: 510; letter-spacing: -0.012em;">KAIRO DEV TRACK</span>
+  </div>
+
+  <!-- Sidebar -->
+  <aside id="side"></aside>
+
+  <!-- Main View -->
+  <main id="main"></main>
+
+  <script>
+    /* Roadmap, Phase & Curriculum Definitions */
+    const PH = [
+      "Frontend development",
+      "Java strengthening",
+      "Spring Boot backend",
+      "Security and full-stack integration",
+      "AI engineering foundations",
+      "AI full-stack capstone",
+      "Interview preparation"
+    ];
+
+    const C = [
+      [0, 1, 1, "JavaScript fundamentals", ["Variables, data types, operators and type conversion", "Conditions, loops, functions and scope", "Arrays, objects and strings", "Destructuring, spread/rest and modules", "map, filter, find, reduce and array transformations", "DOM manipulation and event handling"], "Build an interactive JavaScript application without copying a complete tutorial", "Transform an array of objects and render the result on a webpage"],
+      [0, 2, 1, "Asynchronous JavaScript and React foundations", ["Promises and async/await", "fetch, HTTP requests and JSON", "Error handling with try/catch", "React components and JSX", "Props, state and event handling", "Conditional rendering, lists and keys"], "Build a React app that fetches public API data and handles loading, success and error states"],
+      [0, 3, 1, "React application development", ["useState and useEffect", "Forms and controlled inputs", "React Router", "Reusable components and basic custom hooks", "API integration and component organization", "Responsive CSS and basic accessibility"], "Build a multi-page task manager or learning tracker with add, edit, delete and filter features", "Rebuild the core features without following a tutorial"],
+      [1, 4, 1, "Modern Java and testing", ["Lambdas and functional interfaces", "Streams and common stream operations", "Generics and exception handling", "equals and hashCode contracts", "Object-oriented programming revision", "Basic concurrency concepts", "Maven and JUnit fundamentals", "JDBC and prepared statements"], "Build a tested Java program that processes collections and reads or writes data through JDBC", "Solve collection problems, create a custom exception and write unit tests"],
+      [2, 5, 1, "Spring Boot fundamentals", ["Project structure and Maven", "Dependency injection and configuration", "Controllers, services and repositories", "REST APIs, JSON and HTTP methods", "HTTP status codes and API design"], "Build a REST API with a controller-service-repository structure"],
+      [2, 6, 1, "Database integration", ["MySQL or PostgreSQL", "Spring Data JPA and Hibernate", "Entities, primary keys and relationships", "CRUD operations and pagination", "SQL joins, indexes and transactions"], "Build a persistent API with related database entities and pagination"],
+      [2, 7, 1, "Reliable API development", ["DTOs and request/response design", "Bean Validation", "Global exception handling", "Transactions and data consistency", "Logging and environment-based configuration"], "An API with meaningful validation errors and appropriate HTTP responses"],
+      [2, 8, 1, "Testing and database performance", ["JUnit and Mockito", "Unit and integration testing", "Repository and API tests", "SQL logging and query analysis", "Detecting and fixing N+1 query problems"], "A tested API with reliable critical endpoints and no known avoidable N+1 issues"],
+      [2, 9, 1, "First deployment", ["Production builds and runtime configuration", "Environment variables and secrets", "Production database configuration", "Basic Linux commands and application logs", "Deploy the backend to a suitable hosting service"], "A live API with a README and documented endpoints"],
+      [3, 10, 1, "Authentication", ["Spring Security fundamentals", "Password hashing", "Registration and login flows", "Authentication versus authorization", "Sessions and JWT concepts"], "Secure registration and login with hashed passwords"],
+      [3, 11, 1, "Authorization and web security", ["JWT validation and expiration", "Role-based access control", "Protected endpoints", "CORS and secure configuration", "SQL injection and broken access control", "Security testing and error handling"], "Users can access only resources they are authorized to use"],
+      [3, 12, 1, "Complete full-stack application", ["Connect React to Spring Boot", "Login, logout and protected pages", "Form validation and error messages", "Test important user flows", "Responsive UI, deployment and documentation"], "A deployed full-stack application with authentication, CRUD, database persistence and tests"],
+      [4, 13, 1, "LLM fundamentals", ["Tokens and context windows", "Prompt design and structured outputs", "LLM API integration", "Basic Python needed for AI experiments", "Streaming and tool/function calling concepts", "Timeouts, retries, rate limits and API costs"], "An AI utility that calls an LLM API and returns structured results"],
+      [4, 14, 1, "Embeddings and semantic retrieval", ["Embeddings and semantic similarity", "Document chunking", "Vector search and metadata filtering", "PostgreSQL with pgvector or an equivalent vector database", "Evaluate retrieval relevance"], "Search a collection of documents and return relevant passages"],
+      [4, 15, 1, "Retrieval-augmented generation", ["RAG architecture", "Retrieval and context construction", "Answer generation grounded in retrieved information", "Citations and hallucination checks", "Evaluation and basic prompt-injection awareness", "AI privacy and handling sensitive information"], "A document question-answering prototype that displays supporting source passages"],
+      [5, 16, 2, "Build the capstone", ["React user interface", "Spring Boot API and relational database", "LLM integration through the backend", "Document ingestion and retrieval", "Authentication and access control", "Add tool calling only when it solves a real problem"], "A working end-to-end AI application"],
+      [5, 18, 2, "Production readiness", ["Docker and Docker Compose", "Automated build and test pipeline", "Deployment, logging and error handling", "Security review and environment configuration", "Edge-case testing and UI improvements", "Architecture documentation and README"], "A deployed capstone with a live link, source code, setup instructions and an architecture explanation"],
+      [6, 20, 1, "Job readiness", ["Java, OOP, collections and exception revision", "SQL, DBMS and networking revision", "DSA practice and complexity analysis", "Technical and HR mock interviews", "Resume and GitHub cleanup", "Practise explaining project decisions in English"], "A polished portfolio, a project presentation and a list of topics to revise before interviews"]
+    ].map(([p, s, n, t, i, d, x]) => ({ p, s, n, t, i, d, x }));
+
+    const wl = b => b.n > 1 ? `Weeks ${b.s}–${b.s + b.n - 1}` : `Week ${b.s}`;
+
+    const T = [];
+    C.forEach((b, bi) => {
+      const a = b.i.map(t => ({
+        t,
+        c: /^(Deploy|Connect|Add |Docker|Automated|Production|Build)/.test(t) ? 'Build'
+          : /revision|mock|practi|DSA|Evaluate|Detect/i.test(t) ? 'Practise'
+          : /test/i.test(t) ? 'Test'
+          : /review|cleanup/i.test(t) ? 'Review'
+          : 'Learn'
+      }));
+      a.push({ t: 'Deliverable: ' + b.d, c: 'Build', m: 1 });
+      if (b.x) a.push({ t: 'Self-test: ' + b.x, c: 'Test', s: 1 });
+      const sd = 6 * b.n;
+      a.forEach((o, k) => {
+        const q = Math.floor(k * sd / a.length);
+        T.push({
+          id: bi + '.' + k,
+          b: bi,
+          d: q + Math.floor(q / 6) + 1,
+          title: o.t,
+          cat: o.c,
+          m: o.m,
+          s: o.s
+        });
+      });
+    });
+
+    const PR = [
+      ["React API application", "Build a React app consuming a public API with routing, forms and clean state handling.", "React, JavaScript, React Router, fetch", ["Scaffold app and routing", "Fetch and render API data", "Loading and error states", "Forms and CRUD interactions", "Responsive styling and accessibility", "Deploy and write README"]],
+      ["Java and Spring Boot REST API", "Design a persistent, validated, tested REST API.", "Java, Spring Boot, JPA, PostgreSQL/MySQL, JUnit", ["Controller-service-repository structure", "Entities and relationships", "DTOs and validation", "Global exception handling", "Unit and integration tests", "Deploy with README and endpoint docs"]],
+      ["Full-stack application with authentication", "React front end with Spring Security and JWT.", "React, Spring Boot, Spring Security, JWT, SQL", ["Registration and login", "JWT validation and roles", "Protected endpoints and pages", "CRUD with persistence", "Test key user flows", "Deploy and document"]],
+      ["AI-enabled full-stack capstone", "End-to-end document Q&A app with retrieval and grounded answers.", "React, Spring Boot, LLM API, pgvector, Docker", ["Document ingestion and chunking", "Embeddings and vector search", "RAG answers with sources", "Authentication and access control", "Docker Compose and CI pipeline", "Deploy, architecture doc and README"]]
+    ];
+
+    const BL = [
+      ["Main learning", 150],
+      ["Project work", 90],
+      ["DSA and SQL", 45],
+      ["AI or computer science fundamentals", 45],
+      ["English speaking and revision", 30]
+    ];
+
+    const KEY = 'kairo-dev-track-v1';
+    const $ = s => document.querySelector(s);
+    const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    /* Precision SVG Icons */
+    const ic = n => `<svg viewBox="0 0 24 24">${{
+      lay: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+      chk: '<path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/>',
+      map: '<path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/>',
+      fol: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8L10 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>',
+      rev: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+      set: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+      ch: '<path d="m9 6 6 6-6 6"/>',
+      pl: '<path d="M12 5v14M5 12h14"/>',
+      tr: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+      pe: '<path d="M17 3l4 4L8 20H4v-4z"/>',
+      ar: '<path d="M5 12h14m-6-6 6 6-6 6"/>'
+    }[n] || ''}</svg>`;
+
+    const ld = d => {
+      d = d || new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    };
+
+    let S, ui = { page: 'overview', open: {}, q: '', fs: 'all', fc: 'all', cf: null, edit: null, nav: 0, io: '', msg: '' }, bad = 0;
+
+    const def = () => ({
+      start: ld(),
+      target: 6,
+      theme: 'dark',
+      done: {},
+      custom: [],
+      sel: null,
+      blk: {},
+      proj: {},
+      rev: {},
+      st: {}
+    });
+
+    function load() {
+      let r = null;
+      try {
+        r = JSON.parse(localStorage.getItem(KEY));
+      } catch (e) {
+        bad = 1;
+      }
+      S = Object.assign(def(), r || {});
+      if (!S.sel) {
+        const c = cur();
+        S.sel = { b: c.b, d: c.d };
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(S));
+      } catch (e) {
+        bad = 1;
+      }
+    }
+
+    function cur() {
+      const n = Math.floor((new Date(S.start) - 0 > 0 ? (new Date(ld()) - new Date(S.start)) / 864e5 : 0));
+      const w = Math.min(20, Math.max(1, Math.floor(n / 7) + 1));
+      const b = C.findIndex(x => w >= x.s && w < x.s + x.n);
+      return {
+        w,
+        b,
+        d: Math.min(7 * C[b].n, Math.max(1, n - (C[b].s - 1) * 7 + 1))
+      };
+    }
+
+    const isD = t => t.custom ? !!t.done : !!S.done[t.id];
+    const pc = a => a.length ? Math.round(a.filter(isD).length / a.length * 100) : 0;
+    const tb = b => T.filter(t => t.b == b);
+    const tp = p => T.filter(t => C[t.b].p == p);
+    const bar = p => `<div class="bar"><b style="width:${p}%"></b></div>`;
+
+    const set = (p, v) => {
+      const k = p.split('.');
+      let o = S;
+      k.slice(0, -1).forEach(x => o = o[x] = o[x] || {});
+      o[k.at(-1)] = v;
+    };
+
+    const get = (p, d = '') => {
+      let o = S;
+      for (const k of p.split('.')) {
+        o = o?.[k];
+      }
+      return o ?? d;
+    };
+
+    /* Category badge class resolver */
+    const catClass = c => {
+      const map = {
+        'Learn': 'bg-learn',
+        'Build': 'bg-build',
+        'Practise': 'bg-practise',
+        'Test': 'bg-test',
+        'Review': 'bg-review'
+      };
+      return map[c] || '';
+    };
+
+    /* Sidebar Renderer */
+    function side() {
+      const c = cur();
+      const all = pc(T);
+      const N = [
+        ['overview', 'lay', 'Overview'],
+        ['daily', 'chk', 'Daily Checklist'],
+        ['roadmap', 'map', '20-Week Roadmap'],
+        ['projects', 'fol', 'Projects'],
+        ['reviews', 'rev', 'Weekly Reviews'],
+        ['settings', 'set', 'Settings']
+      ];
+
+      $('#side').className = ui.nav ? 'o' : '';
+      $('#side').innerHTML = `
+        <div class="logo">
+          <div class="logo-glyph"></div>
+          <span>KAIRO DEV TRACK</span>
+        </div>
+        ${N.map(n => `
+          <button class="nv ${ui.page == n[0] ? 'on' : ''}" data-a="nav" data-v="${n[0]}">
+            ${ic(n[1])}${n[2]}
+          </button>
+        `).join('')}
+        <div class="sp"></div>
+        <div class="sidebar-widget">
+          <div class="lb">Phase ${C[c.b].p + 1} · Week ${c.w}</div>
+          <div style="color:var(--color-paper); font-size:13px; font-weight:510; margin-top:2px;">${PH[C[c.b].p]}</div>
+          <div class="m tab-num" style="margin-top:6px">${all}% completed</div>
+          ${bar(all)}
+        </div>
+      `;
+      document.documentElement.dataset.theme = S.theme;
+    }
+
+    const match = t => {
+      const q = ui.q.toLowerCase();
+      return (!q || (t.title + ' ' + (t.desc || '')).toLowerCase().includes(q)) &&
+             (ui.fs == 'all' || (ui.fs == 'done') == isD(t)) &&
+             (ui.fc == 'all' || t.cat == ui.fc);
+    };
+
+    const row = t => `
+      <div class="row ${isD(t) ? 'd' : ''}">
+        <input type="checkbox" id="c${t.id}" data-a="${t.custom ? 'tgc' : 'tg'}" data-id="${t.id}" ${isD(t) ? 'checked' : ''}>
+        <label for="c${t.id}">
+          ${esc(t.title)}
+          ${t.desc ? `<div class="sub">${esc(t.desc)}</div>` : ''}
+        </label>
+        ${t.min ? `<span class="m tab-num">${t.min}m</span>` : ''}
+        <span class="bg ${catClass(t.cat)}">${t.cat}</span>
+        ${t.custom ? `
+          <button class="bt" data-a="edit" data-id="${t.id}" aria-label="Edit">${ic('pe')}</button>
+          ${ui.cf == t.id ? `
+            <button class="bt dg" data-a="delok" data-id="${t.id}">Delete</button>
+            <button class="bt" data-a="nocf">Cancel</button>
+          ` : `
+            <button class="bt" data-a="del" data-id="${t.id}" aria-label="Delete">${ic('tr')}</button>
+          `}
+        ` : ''}
+      </div>
+    `;
+
+    const filt = r => `
+      <div class="flt">
+        <input type="text" id="q" data-f="q" placeholder="Search tasks…" value="${esc(ui.q)}" aria-label="Search">
+        <select data-f="fs" aria-label="Status">
+          ${[['all', 'All statuses'], ['todo', 'Incomplete'], ['done', 'Completed']].map(o => `
+            <option value="${o[0]}" ${ui.fs == o[0] ? 'selected' : ''}>${o[1]}</option>
+          `).join('')}
+        </select>
+        <select data-f="fc" aria-label="Category">
+          ${['all', 'Learn', 'Practise', 'Build', 'Test', 'Review'].map(o => `
+            <option value="${o}" ${ui.fc == o ? 'selected' : ''}>${o == 'all' ? 'All categories' : o}</option>
+          `).join('')}
+        </select>
+      </div>
+    `;
+
+    const dayT = (b, d) => [
+      ...T.filter(t => t.b == b && t.d == d),
+      ...S.custom.filter(t => t.b == b && t.d == d).map(t => ({ ...t, custom: 1 }))
+    ];
+
+    /* Overview Page */
+    function vOver() {
+      const c = cur();
+      const b = C[c.b];
+      const ph = C[c.b].p;
+      const tw = tb(c.b);
+      const td = dayT(c.b, c.d);
+      const all = T.filter(isD).length;
+      const ms = T.find(t => t.m && !isD(t));
+      const pi = PR.findIndex((p, i) => (S.proj[i]?.st || 'Not started') != 'Done');
+      const pj = S.proj[pi] || {};
+      const days = [...Array(7)].map((_, i) => ld(new Date(Date.now() - (6 - i) * 864e5)));
+      const ct = days.map(d => Object.values(S.done).filter(v => v == d).length + S.custom.filter(t => t.done == d).length);
+      const mx = Math.max(1, ...ct);
+
+      return `
+        <div class="hd">
+          <div>
+            <div class="m" style="letter-spacing:0.04em;">PHASE ${ph + 1} · ${wl(b).toUpperCase()}</div>
+            <h1>${esc(b.t)}</h1>
+            <p class="sub">${PH[ph]}</p>
+          </div>
+          <button class="bt pr" data-a="cont">
+            Continue Learning ${ic('ar')}
+          </button>
+        </div>
+
+        <div class="g">
+          <div class="card">
+            <div class="lb">Overall roadmap</div>
+            <div class="big tab-num">${pc(T)}%</div>
+            ${bar(pc(T))}
+            <div class="m tab-num" style="margin-top:8px">${all} done · ${T.length - all} remaining</div>
+          </div>
+          <div class="card">
+            <div class="lb">Current phase</div>
+            <div class="big tab-num">${pc(tp(ph))}%</div>
+            ${bar(pc(tp(ph)))}
+            <div class="m tab-num" style="margin-top:8px">${tp(ph).filter(isD).length}/${tp(ph).length} tasks</div>
+          </div>
+          <div class="card">
+            <div class="lb">Next milestone</div>
+            <div style="color:var(--color-paper); font-size:14px; font-weight:510; margin-top:6px; line-height:1.4;">
+              ${ms ? esc(ms.title.replace('Deliverable: ', '')) : 'All deliverables complete'}
+            </div>
+            ${ms ? `<div class="m" style="margin-top:4px">${wl(C[ms.b])}</div>` : ''}
+          </div>
+          <div class="card">
+            <div class="lb">Current project</div>
+            <div style="color:var(--color-paper); font-size:14px; font-weight:510; margin-top:6px;">
+              ${pi < 0 ? 'All projects done' : PR[pi][0]}
+            </div>
+            <div class="m" style="margin-top:4px">${pi < 0 ? '' : pj.st || 'Not started'}</div>
+          </div>
+          <div class="card">
+            <div class="lb">Weekly self-test</div>
+            <div style="color:var(--color-paper); font-size:14px; font-weight:510; margin-top:6px;">
+              ${b.x ? (S.st[c.b] || 'Not taken') : 'No self-test this block'}
+            </div>
+            <div class="m tab-num" style="margin-top:4px">${tw.filter(isD).length}/${tw.length} week tasks</div>
+          </div>
+          <div class="card">
+            <div class="lb">Last 7 days · tasks completed</div>
+            <div class="act">
+              ${ct.map((n, i) => `
+                <div class="act-col" title="${days[i]}: ${n} tasks">
+                  <div style="height:${Math.max(6, n / mx * 100)}%"></div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="m tab-num" style="margin-top:8px">${ct.reduce((a, b) => a + b, 0)} total this week</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd" style="margin-bottom:12px;">
+            <h2>Today’s tasks · Day ${c.d}</h2>
+            <span class="m tab-num">${td.filter(isD).length}/${td.length}</span>
+          </div>
+          ${td.length ? td.map(row).join('') : '<p class="sub">Rest or light revision day. No planned tasks.</p>'}
+        </div>
+      `;
+    }
+
+    const bn = (b, i) => i == 3 && C[b].s >= 5 ? 'AI learning (supporting track)' : BL[i][0];
+
+    function dList() {
+      const { b, d } = S.sel;
+      const l = dayT(b, d).filter(match);
+      return l.length ? l.map(row).join('') : `<p class="sub">${ui.q || ui.fs != 'all' || ui.fc != 'all' ? 'No tasks match the filters.' : 'Nothing planned for this day. Add a custom task or rest.'}</p>`;
+    }
+
+    /* Daily Checklist Page */
+    function vDaily() {
+      const { b, d } = S.sel;
+      const B = C[b];
+      const k = b + ':' + d;
+      const e = S.blk[k] || { d: [], h: '', n: '' };
+      const ed = S.custom.find(t => t.id == ui.edit) || {};
+      const all = dayT(b, d);
+      const rest = d % 7 == 0;
+
+      return `
+        <h1>Daily Checklist</h1>
+        <p class="sub">${wl(B)} · Day ${d}${rest ? ' · Rest / Light Revision Day' : ''}</p>
+
+        <div class="flt">
+          <select data-a="selb" aria-label="Week">
+            ${C.map((x, i) => `
+              <option value="${i}" ${i == b ? 'selected' : ''}>${wl(x)} — ${esc(x.t)}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="tabs">
+          ${[...Array(7 * B.n)].map((_, i) => `
+            <button class="bt tb ${i + 1 == d ? 'on' : ''}" data-a="seld" data-v="${i + 1}">
+              ${(i + 1) % 7 == 0 ? 'R' : i + 1}
+            </button>
+          `).join('')}
+        </div>
+
+        ${filt()}
+
+        <div class="card">
+          <div class="hd" style="margin-bottom:12px;">
+            <h2>Tasks</h2>
+            <span class="m tab-num">${all.filter(isD).length}/${all.length} complete</span>
+          </div>
+          <div id="lst">${dList()}</div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h2>${ui.edit ? 'Edit custom task' : 'Add custom task'}</h2>
+          <div class="cols" style="margin-top:14px">
+            <div class="f">
+              <span class="lb">Title</span>
+              <input type="text" id="nt" placeholder="e.g. Build counter component" value="${esc(ed.title)}">
+            </div>
+            <div class="f">
+              <span class="lb">Description (optional)</span>
+              <input type="text" id="nd" placeholder="Additional task notes or requirements" value="${esc(ed.desc)}">
+            </div>
+            <div class="f">
+              <span class="lb">Category</span>
+              <select id="nc">
+                ${['Learn', 'Practise', 'Build', 'Test', 'Review'].map(o => `
+                  <option ${ed.cat == o ? 'selected' : ''}>${o}</option>
+                `).join('')}
+              </select>
+            </div>
+            <div class="f">
+              <span class="lb">Minutes (optional)</span>
+              <input type="number" id="nm" min="0" placeholder="45" value="${ed.min || ''}">
+            </div>
+          </div>
+          <button class="bt" data-a="save">${ic('pl')}${ui.edit ? 'Save task' : 'Add task'}</button>
+          ${ui.edit ? '<button class="bt" data-a="nocf" style="margin-left:6px">Cancel</button>' : ''}
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="hd" style="margin-bottom:12px;">
+            <h2>Study blocks</h2>
+            <span class="m tab-num">${(e.d || []).filter(Boolean).length}/5 · optional</span>
+          </div>
+          ${B.s >= 13 && B.s <= 19 ? '<p class="sub" style="margin-bottom:12px">Main learning can shift toward AI during these weeks.</p>' : ''}
+          ${BL.map((x, i) => `
+            <div class="row">
+              <input type="checkbox" id="b${i}" data-a="blk" data-v="${i}" ${e.d?.[i] ? 'checked' : ''}>
+              <label for="b${i}">${bn(b, i)}</label>
+              <span class="m tab-num">${x[1]}m</span>
+            </div>
+          `).join('')}
+          <div class="cols" style="margin-top:16px">
+            <div class="f">
+              <span class="lb">Hours studied (Target ${S.target} hrs)</span>
+              <input type="number" step=".25" min="0" data-b="blk.${k}.h" value="${esc(e.h)}" placeholder="e.g. 5.5">
+            </div>
+            <div class="f">
+              <span class="lb">Daily reflection & notes</span>
+              <textarea data-b="blk.${k}.n" placeholder="Key breakthroughs, blockers or lessons">${esc(e.n)}</textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /* 20-Week Roadmap Page */
+    function roadList() {
+      const open = ui.q || ui.fs != 'all' || ui.fc != 'all';
+      const c = cur();
+      return PH.map((n, p) => {
+        const bs = C.map((b, i) => [b, i]).filter(x => x[0].p == p);
+        const pp = pc(tp(p));
+        const st = pp == 100 ? 'Completed' : c.b != null && C[c.b].p == p ? 'Active' : 'Upcoming';
+        const o = open || ui.open['p' + p];
+
+        return `
+          <div class="card" style="margin-bottom:14px">
+            <button class="acc ${o ? 'o' : ''}" data-a="open" data-v="p${p}">
+              ${ic('ch')}
+              <span style="flex:1">
+                <b style="font-weight:510; font-size:15px">Phase ${p + 1} · ${n}</b>
+                <div class="m" style="margin-top:2px">
+                  ${wl(bs[0][0]).replace('Week ', 'W').replace('Weeks ', 'W')}${bs.length > 1 || bs[0][0].n > 1 ? '–' + (bs.at(-1)[0].s + bs.at(-1)[0].n - 1) : ''} · ${bs.map(x => x[0].t).join(' → ')}
+                </div>
+              </span>
+              <span class="bg ${st == 'Completed' ? 'gr' : ''}">${st}</span>
+              <span class="m tab-num">${pp}%</span>
+            </button>
+            ${bar(pp)}
+            ${o ? bs.map(([b, i]) => {
+              const l = tb(i);
+              const f = l.filter(match);
+              const w = ui.open['b' + i] || open;
+              if (open && !f.length) return '';
+              return `
+                <div style="margin-top:10px; padding-left:14px; border-left:1px solid var(--color-graphite)">
+                  <button class="acc ${w ? 'o' : ''}" data-a="open" data-v="b${i}">
+                    ${ic('ch')}
+                    <span style="flex:1; font-size:14px">${wl(b)}: ${esc(b.t)}</span>
+                    <span class="m tab-num">${pc(l)}%</span>
+                  </button>
+                  ${w ? (open ? f : l).map(row).join('') : ''}
+                </div>
+              `;
+            }).join('') : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    const vRoad = () => `
+      <h1>20-Week Roadmap</h1>
+      <p class="sub">Seven structured phases. Every phase is open to inspect and navigate freely.</p>
+      ${filt()}
+      <div id="lst">${roadList()}</div>
+    `;
+
+    /* Projects Page */
+    function vProj() {
+      return `
+        <h1>Projects</h1>
+        <p class="sub">Portfolio deliverables with tracked milestone tasks, repository links and live URLs.</p>
+        <div class="g" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); margin-top:20px;">
+          ${PR.map((p, i) => {
+            const s = S.proj[i] || {};
+            const dn = s.done || {};
+            const n = Object.values(dn).filter(Boolean).length;
+            const statusClass = s.st == 'Done' ? 'gr' : '';
+            return `
+              <div class="card">
+                <div class="hd" style="margin-bottom:6px">
+                  <h2>${p[0]}</h2>
+                  <span class="bg ${statusClass}">${s.st || 'Not started'}</span>
+                </div>
+                <p class="sub" style="font-size:13px">${p[1]}</p>
+                <p class="m" style="margin:6px 0 10px">${p[2]}</p>
+                ${bar(Math.round(n / p[3].length * 100))}
+                <div style="margin:14px 0 16px">
+                  ${p[3].map((t, k) => `
+                    <div class="row">
+                      <input type="checkbox" id="p${i}${k}" data-a="pt" data-i="${i}" data-k="${k}" ${dn[k] ? 'checked' : ''}>
+                      <label for="p${i}${k}">${t}</label>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="f">
+                  <span class="lb">Status</span>
+                  <select data-b="proj.${i}.st">
+                    ${['Not started', 'In progress', 'Done'].map(o => `
+                      <option ${(s.st || 'Not started') == o ? 'selected' : ''}>${o}</option>
+                    `).join('')}
+                  </select>
+                </div>
+                <div class="f">
+                  <span class="lb">GitHub repository URL</span>
+                  <input type="url" data-b="proj.${i}.repo" value="${esc(s.repo)}" placeholder="https://github.com/…">
+                </div>
+                <div class="f">
+                  <span class="lb">Live deployment URL</span>
+                  <input type="url" data-b="proj.${i}.live" value="${esc(s.live)}" placeholder="https://…">
+                </div>
+                <div class="f">
+                  <span class="lb">Notes and lessons learned</span>
+                  <textarea data-b="proj.${i}.notes" placeholder="Key design decisions, architecture challenges and solutions">${esc(s.notes)}</textarea>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    /* Weekly Reviews Page */
+    function vRev() {
+      return `
+        <h1>Weekly Reviews</h1>
+        <p class="sub">Structured retrospective logs. Weeks 16–17 and 18–19 are reviewed as unified capstone blocks.</p>
+        ${C.map((b, i) => {
+          const l = tb(i);
+          const r = S.rev[i] || {};
+          const o = ui.open['r' + i];
+          const dv = l.find(t => t.m);
+          const sf = l.find(t => t.s);
+
+          return `
+            <div class="card" style="margin-top:14px">
+              <button class="acc ${o ? 'o' : ''}" data-a="open" data-v="r${i}">
+                ${ic('ch')}
+                <span style="flex:1">
+                  <b style="font-weight:510">${wl(b)}: ${esc(b.t)}</b>
+                </span>
+                <span class="bg ${r.done ? 'gr' : ''}">${r.done ? 'Reviewed' : 'Open'}</span>
+                <span class="m tab-num">${l.filter(isD).length}/${l.length}</span>
+              </button>
+              ${o ? `
+                <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--color-graphite)">
+                  <p class="m" style="margin-bottom:14px">
+                    Completed ${l.filter(isD).length} · Remaining ${l.filter(t => !isD(t)).length} · Deliverable: ${isD(dv) ? 'Done' : 'Pending'}${sf ? ' · Self-test: ' + (isD(sf) ? 'Done' : 'Pending') : ''}
+                  </p>
+                  <div class="f">
+                    <span class="lb">Self-test assessment</span>
+                    <select data-b="st.${i}">
+                      ${['Not taken', 'Passed', 'Needs revision'].map(x => `
+                        <option ${(S.st[i] || 'Not taken') == x ? 'selected' : ''}>${x}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+                  ${[
+                    ['learned', 'What I learned & mastered'],
+                    ['struggled', 'What I struggled with & blockers'],
+                    ['revise', 'Topics that require revision'],
+                    ['next', 'Next week’s primary goal']
+                  ].map(f => `
+                    <div class="f">
+                      <span class="lb">${f[1]}</span>
+                      <textarea data-b="rev.${i}.${f[0]}">${esc(r[f[0]])}</textarea>
+                    </div>
+                  `).join('')}
+                  <div class="row" style="margin-top:12px; border:0">
+                    <input type="checkbox" id="rv${i}" data-a="rv" data-i="${i}" ${r.done ? 'checked' : ''}>
+                    <label for="rv${i}">Mark weekly review completed</label>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    /* Settings Page */
+    function vSet() {
+      const c = cur();
+      return `
+        <h1>Settings</h1>
+        <p class="sub">Preferences, local storage management and data backup.</p>
+        <div class="st" style="margin-top:20px">
+          <div class="card">
+            <h2>Roadmap schedule</h2>
+            <div class="cols" style="margin-top:14px">
+              <div class="f">
+                <span class="lb">Start date</span>
+                <input type="date" data-b="start" data-r=1 value="${S.start}">
+              </div>
+              <div class="f">
+                <span class="lb">Daily study target (hours)</span>
+                <input type="number" step=".5" min="1" data-b="target" value="${S.target}">
+              </div>
+              <div class="f">
+                <span class="lb">Interface theme</span>
+                <select data-b="theme">
+                  ${['dark', 'light'].map(o => `
+                    <option ${S.theme == o ? 'selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1)} Mode</option>
+                  `).join('')}
+                </select>
+              </div>
+            </div>
+            <p class="sub" style="margin-top:8px">
+              Calculated active position: <b>Week ${c.w}</b> (${wl(C[c.b])}, Day ${c.d}).
+            </p>
+          </div>
+
+          <div class="card">
+            <h2>Export & Import</h2>
+            <p class="sub">
+              ${bad ? '<b style="color:var(--color-coral-red)">Local storage is unavailable; progress will not persist across reloads.</b> ' : ''}
+              Your data is stored locally in this browser. Export regularly to create a backup file or sync with other devices.
+            </p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin:14px 0">
+              <button class="bt" data-a="exp">Export JSON file</button>
+              <button class="bt" data-a="imp">Import from text area</button>
+              <label class="bt" for="fi" style="cursor:pointer">Import from JSON file</label>
+              <input type="file" id="fi" accept=".json,application/json" hidden>
+            </div>
+            <textarea id="io" aria-label="JSON data" style="min-height:120px" class="mono">${esc(ui.io)}</textarea>
+            ${ui.msg ? `<p class="sub" style="color:var(--color-paper); margin-top:8px">${esc(ui.msg)}</p>` : ''}
+          </div>
+
+          <div class="card">
+            <h2 style="color:var(--color-coral-red)">Reset progress</h2>
+            <p class="sub">Permanently clears all tasks, custom items, study blocks, projects and notes stored in this browser.</p>
+            <div style="margin-top:14px">
+              ${ui.cf == 'reset' ? `
+                <button class="bt dg" data-a="resetok">Yes, permanently erase all progress</button>
+                <button class="bt" data-a="nocf" style="margin-left:8px">Cancel</button>
+              ` : `
+                <button class="bt dg" data-a="cf" data-v="reset">Reset progress…</button>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      side();
+      $('#main').innerHTML = {
+        overview: vOver,
+        daily: vDaily,
+        roadmap: vRoad,
+        projects: vProj,
+        reviews: vRev,
+        settings: vSet
+      }[ui.page]();
+      window.scrollTo(0, ui.keep || 0);
+      ui.keep = 0;
+    }
+
+    const list = () => {
+      $('#lst').innerHTML = ui.page == 'daily' ? dList() : roadList();
+    };
+
+    function imp(txt) {
+      try {
+        const o = JSON.parse(txt);
+        if (!o || typeof o != 'object' || !o.done) throw 0;
+        S = Object.assign(def(), o);
+        save();
+        ui.msg = 'Import successful! All progress has been restored.';
+      } catch (e) {
+        ui.msg = 'Import failed: The provided JSON is not a valid Kairo progress backup.';
+      }
+      render();
+    }
+
+    document.addEventListener('click', e => {
+      const el = e.target.closest('[data-a]');
+      if (!el) return;
+      const a = el.dataset.a, v = el.dataset.v, id = el.dataset.id;
+      ui.keep = window.scrollY;
+      let R = 1;
+
+      if (a == 'nav') {
+        ui.page = v;
+        ui.nav = 0;
+        ui.keep = 0;
+        ui.q = '';
+        ui.fs = ui.fc = 'all';
+      } else if (a == 'menu') {
+        ui.nav = !ui.nav;
+      } else if (a == 'tg') {
+        if (el.checked) S.done[id] = ld();
+        else delete S.done[id];
+      } else if (a == 'tgc') {
+        const t = S.custom.find(x => x.id == id);
+        if (t) t.done = el.checked ? ld() : '';
+      } else if (a == 'cont') {
+        const c = cur();
+        S.sel = { b: c.b, d: c.d };
+        ui.page = 'daily';
+        ui.keep = 0;
+      } else if (a == 'seld') {
+        S.sel.d = +v;
+      } else if (a == 'open') {
+        ui.open[v] = !ui.open[v];
+      } else if (a == 'blk') {
+        const k = S.sel.b + ':' + S.sel.d;
+        const entry = S.blk[k] = S.blk[k] || { d: [], h: '', n: '' };
+        entry.d[+v] = el.checked;
+      } else if (a == 'pt') {
+        const p = S.proj[el.dataset.i] = S.proj[el.dataset.i] || {};
+        (p.done = p.done || {})[el.dataset.k] = el.checked;
+      } else if (a == 'rv') {
+        set('rev.' + el.dataset.i + '.done', el.checked);
+      } else if (a == 'save') {
+        const t = $('#nt').value.trim();
+        if (!t) return $('#nt').focus();
+        const o = {
+          title: t,
+          desc: $('#nd').value.trim(),
+          cat: $('#nc').value,
+          min: +$('#nm').value || 0
+        };
+        if (ui.edit) Object.assign(S.custom.find(x => x.id == ui.edit), o);
+        else S.custom.push({ id: 'c' + Date.now(), b: S.sel.b, d: S.sel.d, done: '', ...o });
+        ui.edit = null;
+      } else if (a == 'edit') {
+        ui.edit = id;
+        ui.keep = 0;
+      } else if (a == 'nocf') {
+        ui.cf = null;
+        ui.edit = null;
+      } else if (a == 'del' || a == 'cf') {
+        ui.cf = id || v;
+      } else if (a == 'delok') {
+        S.custom = S.custom.filter(x => x.id != id);
+        ui.cf = null;
+      } else if (a == 'resetok') {
+        S = def();
+        const c = cur();
+        S.sel = { b: c.b, d: c.d };
+        ui.cf = null;
+        ui.msg = 'Progress reset completed.';
+      } else if (a == 'exp') {
+        ui.io = JSON.stringify(S, null, 2);
+        ui.msg = 'JSON exported. You can copy the text below or download the file.';
+        try {
+          const u = URL.createObjectURL(new Blob([ui.io], { type: 'application/json' }));
+          const l = document.createElement('a');
+          l.href = u;
+          l.download = 'kairo-progress-' + ld() + '.json';
+          l.click();
+        } catch (x) {}
+      } else if (a == 'imp') {
+        imp($('#io').value);
+        return;
+      } else {
+        R = 0;
+      }
+
+      if (R) {
+        save();
+        render();
+      }
+    });
+
+    document.addEventListener('input', e => {
+      const t = e.target;
+      if (t.dataset.b) {
+        set(t.dataset.b, t.type == 'checkbox' ? t.checked : t.value);
+        save();
+        side();
+        if (t.dataset.r) render();
+      } else if (t.dataset.f) {
+        ui[t.dataset.f] = t.value;
+        list();
+      } else if (t.dataset.a == 'selb') {
+        S.sel = { b: +t.value, d: 1 };
+        save();
+        ui.keep = 0;
+        render();
+      }
+    });
+
+    document.addEventListener('change', e => {
+      if (e.target.id == 'fi') {
+        const f = e.target.files[0];
+        if (f) f.text().then(imp);
+      }
+    });
+
+    load();
+    render();
+  </script>
+</body>
+</html>

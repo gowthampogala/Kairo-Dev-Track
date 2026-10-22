@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ArrowRight, CheckCircle2, Calendar, Target, Award, Code2, FileCode, Play, Server, Sparkles, Network, Flame } from 'lucide-react';
+import { FileCode, Server, Sparkles, Network, Flame, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ROADMAP_BLOCKS, PHASES, formatWeekLabel } from '../../data/curriculum';
 import { calculateStreakStats } from '../../services/streak';
@@ -11,9 +11,55 @@ import {
 } from '../../data/springFrameworkCurriculum';
 import { AI_CURRICULUM, TOTAL_AI_TOPICS } from '../../data/aiEngineeringCurriculum';
 import { NETWORK_TOPICS, TOTAL_NETWORK_TOPICS } from '../../data/networkFundamentalsCurriculum';
-import { Badge } from '../common/Badge';
 import { Checkbox } from '../common/Checkbox';
 
+
+
+/* ─────────────────────────────────────────────────────────
+   Small stat display inside the streak row
+───────────────────────────────────────────────────────── */
+const StreamStat: React.FC<{
+  label: string;
+  value: number;
+  unit: string;
+  accent?: boolean;
+}> = ({ label, value, unit, accent }) => (
+  <div style={{ minWidth: 0 }}>
+    <div
+      className="card-label"
+      style={{ fontSize: '10.5px', letterSpacing: '0.05em' }}
+    >
+      {label}
+    </div>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: '4px',
+        marginTop: '3px',
+      }}
+    >
+      <span
+        className="font-mono tab-num"
+        style={{
+          fontSize: '20px',
+          fontWeight: 700,
+          color: accent ? 'var(--color-brand)' : 'var(--color-paper)',
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </span>
+      <span style={{ fontSize: '11px', color: 'var(--color-fog)' }}>
+        {unit}
+      </span>
+    </div>
+  </div>
+);
+
+/* ─────────────────────────────────────────────────────────
+   Main Overview component
+───────────────────────────────────────────────────────── */
 export const OverviewView: React.FC = () => {
   const {
     state,
@@ -59,14 +105,9 @@ export const OverviewView: React.FC = () => {
 
   const handleHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    if (val === '') {
-      setStudyHours(dayKey, '');
-      return;
-    }
+    if (val === '') { setStudyHours(dayKey, ''); return; }
     const num = parseFloat(val);
-    if (!isNaN(num) && num >= 0 && num <= 24) {
-      setStudyHours(dayKey, val);
-    }
+    if (!isNaN(num) && num >= 0 && num <= 24) setStudyHours(dayKey, val);
   };
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -78,385 +119,313 @@ export const OverviewView: React.FC = () => {
     setActivePage('daily');
   };
 
+  // ── Track data ──────────────────────────────────────────
   const jsCompleted = Object.values(state.jsRoadmap || {}).filter(l => l?.completed).length;
-  const jsPercent = Math.round((jsCompleted / JS_CURRICULUM.length) * 100);
+  const jsTotal = JS_CURRICULUM.length;
+  const jsPercent = Math.round((jsCompleted / jsTotal) * 100);
   const nextJSLesson = JS_CURRICULUM.find(l => !state.jsRoadmap?.[l.id]?.completed) || JS_CURRICULUM[0];
+  const jsNextText = `#${nextJSLesson.number} — ${nextJSLesson.title}`;
 
   const springFrameworkCompleted = Object.values(state.springFrameworkRoadmap || {}).filter(l => l?.completed).length;
   const springFrameworkPercent = Math.round((springFrameworkCompleted / TOTAL_ACADEMY_LESSONS) * 100);
   const customVideosMap = state.springFrameworkCustomVideos || {};
 
-  let nextSpringFrameworkVideo: { title: string; moduleTitle: string } | null = null;
+  let nextSpringVideo: { title: string; moduleTitle: string } | null = null;
   for (const m of SPRING_FRAMEWORK_MODULES) {
     const vList = customVideosMap[m.id] || m.defaultVideos;
     const found = vList.find(v => !state.springFrameworkRoadmap?.[v.id]?.completed);
-    if (found) {
-      nextSpringFrameworkVideo = { title: found.title, moduleTitle: m.title };
-      break;
-    }
+    if (found) { nextSpringVideo = { title: found.title, moduleTitle: m.title }; break; }
   }
-  if (!nextSpringFrameworkVideo) {
-    nextSpringFrameworkVideo = { title: 'All videos completed!', moduleTitle: 'Course Complete' };
-  }
+  if (!nextSpringVideo) nextSpringVideo = { title: 'All videos completed!', moduleTitle: 'Course Complete' };
+  const springNextText = `${nextSpringVideo.title} — ${nextSpringVideo.moduleTitle}`;
 
   const networkCompleted = Object.values(state.networkRoadmap || {}).filter(t => t?.completed).length;
   const networkPercent = Math.round((networkCompleted / TOTAL_NETWORK_TOPICS) * 100);
   const nextNetworkTopic = NETWORK_TOPICS.find(t => !state.networkRoadmap?.[t.id]?.completed) || NETWORK_TOPICS[0];
+  const networkNextText = `L${nextNetworkTopic.levelNumber} · ${nextNetworkTopic.title}`;
 
   const aiCompleted = Object.values(state.aiRoadmap || {}).filter(t => t?.completed).length;
   const aiPercent = Math.round((aiCompleted / TOTAL_AI_TOPICS) * 100);
   const nextAITopic = AI_CURRICULUM.find(t => !state.aiRoadmap?.[t.id]?.completed) || AI_CURRICULUM[0];
+  const aiNextText = `${nextAITopic.phase} · ${nextAITopic.title}`;
+
+  // ── Track card definitions ───────────────────────────────
+  const tracks = [
+    {
+      key: 'js',
+      cardLabel: 'JAVASCRIPT CURRICULUM',
+      icon: <FileCode size={19} />,
+      accentColor: 'var(--color-acid-lime)',
+      iconBg: 'rgba(228, 242, 34, 0.12)',
+      iconBorder: 'rgba(228, 242, 34, 0.35)',
+      iconColor: 'var(--color-accent-text)',
+      nextText: jsNextText,
+      progressLine: `${jsCompleted} of ${jsTotal} lessons (${jsPercent}%)`,
+      percent: jsPercent,
+      barColor: 'var(--color-acid-lime)',
+      btnLabel: 'JS Track',
+      onClick: () => setActivePage('js-roadmap'),
+    },
+    {
+      key: 'spring',
+      cardLabel: 'SPRING FRAMEWORK TRACK',
+      icon: <Server size={19} />,
+      accentColor: 'var(--color-pulse-green)',
+      iconBg: 'rgba(39, 166, 68, 0.08)',
+      iconBorder: 'rgba(39, 166, 68, 0.25)',
+      iconColor: 'var(--color-pulse-green)',
+      nextText: springNextText,
+      progressLine: `${springFrameworkCompleted} of ${TOTAL_ACADEMY_LESSONS} videos (${springFrameworkPercent}%) · 8 modules`,
+      percent: springFrameworkPercent,
+      barColor: 'var(--color-pulse-green)',
+      btnLabel: 'Spring Track',
+      onClick: () => setActivePage('spring-framework'),
+    },
+    {
+      key: 'network',
+      cardLabel: 'NETWORK FUNDAMENTALS',
+      icon: <Network size={19} />,
+      accentColor: '#38bdf8',
+      iconBg: 'rgba(56, 189, 248, 0.08)',
+      iconBorder: 'rgba(56, 189, 248, 0.25)',
+      iconColor: '#38bdf8',
+      nextText: networkNextText,
+      progressLine: `${networkCompleted} of ${TOTAL_NETWORK_TOPICS} topics (${networkPercent}%) · 5 levels`,
+      percent: networkPercent,
+      barColor: '#38bdf8',
+      btnLabel: 'Network Track',
+      onClick: () => setActivePage('network-roadmap'),
+    },
+    {
+      key: 'ai',
+      cardLabel: 'AI ENGINEERING TRACK',
+      icon: <Sparkles size={19} />,
+      accentColor: '#c084fc',
+      iconBg: 'rgba(192, 132, 252, 0.08)',
+      iconBorder: 'rgba(192, 132, 252, 0.25)',
+      iconColor: '#c084fc',
+      nextText: aiNextText,
+      progressLine: `${aiCompleted} of ${TOTAL_AI_TOPICS} topics (${aiPercent}%) · 9 phases`,
+      percent: aiPercent,
+      barColor: '#c084fc',
+      btnLabel: 'AI Track',
+      onClick: () => setActivePage('ai-roadmap'),
+    },
+  ] as const;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-      {/* Header Block */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+
+      {/* ── Page Header ──────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div className="font-mono tab-num" style={{ fontSize: '11px', letterSpacing: '0.04em', color: 'var(--color-fog)' }}>
-            PHASE {currentPosition.phaseIndex + 1} · {formatWeekLabel(currentBlock).toUpperCase()}
+          <div
+            className="font-mono tab-num"
+            style={{ fontSize: '11px', letterSpacing: '0.05em', color: 'var(--color-fog)', textTransform: 'uppercase' }}
+          >
+            Phase {currentPosition.phaseIndex + 1} · {formatWeekLabel(currentBlock)}
           </div>
-          <h1 style={{ marginTop: '4px' }}>{currentBlock.title}</h1>
-          <p className="card-subtext" style={{ fontSize: '14px' }}>
+          <h1 style={{ marginTop: '4px', marginBottom: 0 }}>{currentBlock.title}</h1>
+          <p className="card-subtext" style={{ marginTop: '3px', fontSize: '13.5px' }}>
             {currentPhase.title} · Day {currentPosition.dayInBlock} of {currentBlock.weekSpan * 7}
-            {currentPosition.isRestDay && ' (Scheduled Rest / Light Revision Day)'}
+            {currentPosition.isRestDay && ' · Rest / Light Revision Day'}
           </p>
         </div>
-
-        <button className="btn btn-primary" onClick={handleContinueLearning}>
-          Continue Daily Tasks <ArrowRight size={15} />
+        <button className="btn btn-primary" onClick={handleContinueLearning} style={{ gap: '6px' }}>
+          Continue Learning <ArrowRight size={14} />
         </button>
       </div>
 
-      {/* Curriculum Spotlights Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '14px' }}>
-        {/* JavaScript Curriculum Spotlight */}
+      {/* ── Learning Track Cards ─────────────────────────────── */}
+      <section>
+        {/* 2-column grid on desktop, 1-column on mobile */}
         <div
-          className="linear-card"
+          className="kairo-track-grid"
           style={{
-            borderLeft: '2px solid var(--color-acid-lime)',
-            background: 'var(--color-obsidian)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '14px',
-            padding: '16px 18px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
+          {tracks.map(track => (
             <div
+              key={track.key}
+              className="linear-card"
               style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                background: 'rgba(228, 242, 34, 0.12)',
-                border: '1px solid rgba(228, 242, 34, 0.35)',
+                background: 'var(--color-obsidian)',
+                borderLeft: `2px solid ${track.accentColor}`,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-accent-text)',
-                flexShrink: 0
+                justifyContent: 'space-between',
+                gap: '14px',
+                padding: '16px 18px',
               }}
             >
-              <FileCode size={19} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div className="card-label">JavaScript Curriculum</div>
-              <div
+              {/* Left: icon + text */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                {/* Icon badge */}
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '8px',
+                    background: track.iconBg,
+                    border: `1px solid ${track.iconBorder}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: track.iconColor,
+                    flexShrink: 0,
+                  }}
+                >
+                  {track.icon}
+                </div>
+
+                {/* Text: label / next / progress */}
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    className="card-label"
+                    style={{ fontSize: '10px', letterSpacing: '0.06em' }}
+                  >
+                    {track.cardLabel}
+                  </div>
+
+                  {/* Next: — truncated to one line */}
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: 'var(--color-paper)',
+                      marginTop: '2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    Next: {track.nextText}
+                  </div>
+
+                  {/* Progress line */}
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: 'var(--color-mist)',
+                      marginTop: '2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {track.progressLine}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: action button */}
+              <button
+                className="btn btn-primary"
+                onClick={track.onClick}
                 style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--color-paper)',
-                  marginTop: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12px',
+                  height: '32px',
+                  padding: '0 14px',
+                  flexShrink: 0,
                   whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
                 }}
               >
-                Next: #{nextJSLesson.number} {nextJSLesson.title}
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-mist)', marginTop: '2px' }}>
-                {jsCompleted} of {JS_CURRICULUM.length} lessons ({jsPercent}%)
-              </div>
+                {track.btnLabel} <ArrowRight size={13} />
+              </button>
             </div>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => setActivePage('js-roadmap')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', height: '32px', padding: '0 12px' }}
-          >
-            <span>JS Track</span>
-            <ArrowRight size={13} />
-          </button>
+          ))}
         </div>
 
-        {/* Spring Framework Course Spotlight */}
-        <div
-          className="linear-card"
-          style={{
-            borderLeft: '2px solid var(--color-pulse-green)',
-            background: 'var(--color-obsidian)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '14px',
-            padding: '16px 18px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                background: 'rgba(39, 166, 68, 0.08)',
-                border: '1px solid rgba(39, 166, 68, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-pulse-green)',
-                flexShrink: 0
-              }}
-            >
-              <Server size={19} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div className="card-label">Spring Framework Track</div>
-              <div
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--color-paper)',
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                Next: {nextSpringFrameworkVideo.title} ({nextSpringFrameworkVideo.moduleTitle})
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-mist)', marginTop: '2px' }}>
-                {springFrameworkCompleted} of {TOTAL_ACADEMY_LESSONS} videos ({springFrameworkPercent}%) · 8 modules
-              </div>
-            </div>
-          </div>
+      </section>
 
-          <button
-            className="btn btn-primary"
-            onClick={() => setActivePage('spring-framework')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', height: '32px', padding: '0 12px' }}
-          >
-            <span>Spring Track</span>
-            <ArrowRight size={13} />
-          </button>
-        </div>
+      {/* ── Learning Streak & Contribution Heatmap ───────────── */}
+      <section className="linear-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-        {/* Network Fundamentals Spotlight */}
-        <div
-          className="linear-card"
-          style={{
-            borderLeft: '2px solid #38bdf8',
-            background: 'var(--color-obsidian)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '14px',
-            padding: '16px 18px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                background: 'rgba(56, 189, 248, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#38bdf8',
-                flexShrink: 0
-              }}
-            >
-              <Network size={19} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div className="card-label">Network Fundamentals</div>
-              <div
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--color-paper)',
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                Next: L{nextNetworkTopic.levelId} · #{nextNetworkTopic.number} {nextNetworkTopic.title}
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-mist)', marginTop: '2px' }}>
-                {networkCompleted} of {TOTAL_NETWORK_TOPICS} topics ({networkPercent}%) · 5 levels
-              </div>
-            </div>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => setActivePage('network-roadmap')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', height: '32px', padding: '0 12px' }}
-          >
-            <span>Network Track</span>
-            <ArrowRight size={13} />
-          </button>
-        </div>
-
-        {/* AI Engineering Foundation Spotlight */}
-        <div
-          className="linear-card"
-          style={{
-            borderLeft: '2px solid #c084fc',
-            background: 'var(--color-obsidian)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '14px',
-            padding: '16px 18px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '220px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                background: 'rgba(192, 132, 252, 0.08)',
-                border: '1px solid rgba(192, 132, 252, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#c084fc',
-                flexShrink: 0
-              }}
-            >
-              <Sparkles size={19} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div className="card-label">AI Engineering Track</div>
-              <div
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--color-paper)',
-                  marginTop: '1px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                Next: P{nextAITopic.phase} · #{nextAITopic.id} {nextAITopic.title}
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--color-mist)', marginTop: '2px' }}>
-                {aiCompleted} of {TOTAL_AI_TOPICS} topics ({aiPercent}%) · 9 phases
-              </div>
-            </div>
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => setActivePage('ai-roadmap')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', height: '32px', padding: '0 12px' }}
-          >
-            <span>AI Track</span>
-            <ArrowRight size={13} />
-          </button>
-        </div>
-      </div>
-
-      {/* Learning Streak & Contribution Skyline Section */}
-      <div className="linear-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Section heading + today status */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--color-paper)' }}>Learning Streak</h2>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-mono)',
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-badges)',
-                  background: 'var(--color-brand-subtle)',
-                  color: 'var(--color-brand-text)',
-                  border: '1px solid var(--color-brand-border)',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}
-              >
-                <Flame size={13} style={{ color: 'var(--color-brand)' }} />
-                {streakStats.currentStreak > 0 ? `${streakStats.currentStreak}-Day Streak` : 'Streak Inactive'}
-              </span>
-            </div>
-            <div className="card-subtext" style={{ marginTop: '3px', fontSize: '13px' }}>
-              Complete 4 of 5 daily blocks to keep your streak.
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div className="font-mono tab-num" style={{ fontSize: '12px', color: 'var(--color-fog)', textAlign: 'right' }}>
-              <div>Range: <span style={{ color: 'var(--color-paper)' }}>{streakStats.dateRangeStr}</span></div>
-              <div style={{ marginTop: '2px' }}>
-                Today: <span style={{ color: streakStats.todayQualifies ? 'var(--color-brand-text)' : 'var(--color-paper)', fontWeight: 600 }}>
-                  {streakStats.todayCount}/5 blocks completed
-                  {streakStats.todayQualifies ? ' · Qualified' : ''}
+              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Learning Streak</h2>
+              {streakStats.currentStreak > 0 && (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-badges)',
+                    background: 'var(--color-brand-subtle)',
+                    color: 'var(--color-brand-text)',
+                    border: '1px solid var(--color-brand-border)',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Flame size={12} style={{ color: 'var(--color-brand)' }} />
+                  {streakStats.currentStreak}-day streak
                 </span>
-              </div>
+              )}
             </div>
+            <div className="card-subtext" style={{ marginTop: '2px', fontSize: '12.5px' }}>
+              Complete 4 of 5 daily blocks to qualify. Range: {streakStats.dateRangeStr}
+            </div>
+          </div>
+
+          {/* Today's count badge */}
+          <div
+            className="font-mono tab-num"
+            style={{
+              fontSize: '12px',
+              color: streakStats.todayQualifies ? 'var(--color-brand-text)' : 'var(--color-fog)',
+              background: streakStats.todayQualifies ? 'var(--color-brand-subtle)' : 'var(--color-charcoal)',
+              border: `1px solid ${streakStats.todayQualifies ? 'var(--color-brand-border)' : 'var(--color-graphite)'}`,
+              padding: '4px 10px',
+              borderRadius: '6px',
+              alignSelf: 'flex-start',
+            }}
+          >
+            Today: {streakStats.todayCount}/5
+            {streakStats.todayQualifies ? ' · Qualified ✓' : ' blocks'}
           </div>
         </div>
 
-        {/* 4 Quick Metric Precision Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px' }}>
-          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
-            <div className="card-label">Current Streak</div>
-            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-brand)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-              <span className="font-mono tab-num">{streakStats.currentStreak}</span>
-              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>{streakStats.currentStreak === 1 ? 'day' : 'days'}</span>
+        {/* 4 streak stats — horizontal row, no nested cards */}
+        <div
+          className="kairo-streak-stats"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '0',
+            paddingTop: '14px',
+            borderTop: '1px solid var(--color-graphite)',
+          }}
+        >
+          {[
+            { label: 'Current Streak', value: streakStats.currentStreak, unit: streakStats.currentStreak === 1 ? 'day' : 'days', accent: true },
+            { label: 'Longest Streak', value: streakStats.longestStreak, unit: streakStats.longestStreak === 1 ? 'day' : 'days' },
+            { label: 'Qualifying Days', value: streakStats.qualifyingDaysCount, unit: streakStats.qualifyingDaysCount === 1 ? 'day' : 'days' },
+            { label: 'Blocks Completed', value: streakStats.totalBlocksCount, unit: 'total' },
+          ].map((stat, i, arr) => (
+            <div
+              key={stat.label}
+              style={{
+                padding: '0 16px',
+                borderRight: i < arr.length - 1 ? '1px solid var(--color-graphite)' : 'none',
+              }}
+            >
+              <StreamStat {...stat} />
             </div>
-          </div>
-
-          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
-            <div className="card-label">Longest Streak</div>
-            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-paper)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-              <span className="font-mono tab-num">{streakStats.longestStreak}</span>
-              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>{streakStats.longestStreak === 1 ? 'day' : 'days'}</span>
-            </div>
-          </div>
-
-          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
-            <div className="card-label">Qualifying Days</div>
-            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-paper)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-              <span className="font-mono tab-num">{streakStats.qualifyingDaysCount}</span>
-              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>{streakStats.qualifyingDaysCount === 1 ? 'day' : 'days'}</span>
-            </div>
-          </div>
-
-          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
-            <div className="card-label">Blocks Completed</div>
-            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-paper)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-              <span className="font-mono tab-num">{streakStats.totalBlocksCount}</span>
-              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>completed</span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Skyline Heatmap Visualization */}
+        {/* Contribution Heatmap — unchanged */}
         <ContributionSkyline
           data={streakStats.activityDays}
           defaultView="2d"
@@ -469,44 +438,44 @@ export const OverviewView: React.FC = () => {
           heightScale={1.1}
           duration={650}
         />
-      </div>
+      </section>
 
-      {/* Study Blocks & Daily Reflection */}
-      <div className="linear-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Study Blocks & Daily Reflection</h2>
-              <div className="card-subtext" style={{ marginTop: '2px', fontSize: '13px' }}>
-                Day {currentPosition.dayInBlock} · 6-hour structured learning architecture across 5 focus blocks
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-              <div className="font-mono tab-num" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-paper)' }}>
-                {completedBlocksCount}/{totalBlocksCount} blocks completed
-              </div>
-              <div className="font-mono tab-num" style={{ fontSize: '11px', color: 'var(--color-fog)' }}>
-                {completedPlannedHours} {completedPlannedHours === '1' ? 'hour' : 'hours'} completed out of 6.0 planned
-              </div>
+      {/* ── Study Blocks & Daily Reflection ──────────────────── */}
+      <section className="linear-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* Section header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Study Blocks & Daily Reflection</h2>
+            <div className="card-subtext" style={{ marginTop: '2px', fontSize: '12.5px' }}>
+              Day {currentPosition.dayInBlock} · 5 blocks · 6 hours planned
             </div>
           </div>
-
-          {/* Progress Bar */}
-          <div className="linear-progress-bar" style={{ height: '7px', borderRadius: '4px', background: 'var(--color-charcoal)', overflow: 'hidden' }}>
-            <div
-              className="linear-progress-bar-fill"
-              style={{
-                width: `${blocksPercent}%`,
-                background: 'var(--color-pulse-green)',
-                height: '100%',
-                transition: 'width 0.3s ease'
-              }}
-            />
+          <div style={{ textAlign: 'right' }}>
+            <div className="font-mono tab-num" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-paper)' }}>
+              {completedBlocksCount}/{totalBlocksCount} blocks
+            </div>
+            <div className="font-mono tab-num" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '1px' }}>
+              {completedPlannedHours}h of 6.0h planned
+            </div>
           </div>
         </div>
 
-        {/* 5 Study Blocks List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Progress bar */}
+        <div style={{ height: '4px', background: 'var(--color-graphite)', borderRadius: '9999px', overflow: 'hidden' }}>
+          <div
+            style={{
+              height: '100%',
+              width: `${blocksPercent}%`,
+              background: 'var(--color-brand)',
+              borderRadius: '9999px',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+
+        {/* 5 Study Block rows */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {STUDY_BLOCKS.map(block => {
             const isChecked = Boolean(checkedBlocks[block.id]);
             return (
@@ -516,54 +485,52 @@ export const OverviewView: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '14px',
-                  padding: '12px 14px',
+                  gap: '12px',
+                  padding: '10px 13px',
                   borderRadius: '6px',
-                  background: isChecked ? 'rgba(34, 197, 94, 0.05)' : 'var(--color-carbon)',
-                  border: `1px solid ${isChecked ? 'rgba(34, 197, 94, 0.25)' : 'var(--color-graphite)'}`,
+                  background: isChecked ? 'rgba(228, 242, 34, 0.04)' : 'transparent',
+                  border: `1px solid ${isChecked ? 'rgba(228, 242, 34, 0.2)' : 'var(--color-graphite)'}`,
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-                  <div onClick={e => e.stopPropagation()}>
-                    <Checkbox
-                      checked={isChecked}
-                      onChange={() => toggleStudyBlock(dayKey, block.id)}
-                    />
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <span
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        color: isChecked ? 'var(--color-mist)' : 'var(--color-paper)',
-                        textDecoration: isChecked ? 'line-through' : 'none',
-                        transition: 'color 0.15s ease'
-                      }}
-                    >
-                      {block.id + 1}. {block.name}
-                    </span>
-                  </div>
+                <div onClick={e => e.stopPropagation()}>
+                  <Checkbox
+                    checked={isChecked}
+                    onChange={() => toggleStudyBlock(dayKey, block.id)}
+                  />
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <span
+                  style={{
+                    flex: 1,
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: isChecked ? 'var(--color-ash)' : 'var(--color-paper)',
+                    textDecoration: isChecked ? 'line-through' : 'none',
+                    transition: 'color 0.15s ease',
+                  }}
+                >
+                  {block.id + 1}. {block.name}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexShrink: 0 }}>
                   <span
                     className="font-mono tab-num"
                     style={{
                       fontSize: '11px',
-                      padding: '3px 8px',
+                      padding: '2px 7px',
                       borderRadius: '4px',
-                      background: isChecked ? 'rgba(34, 197, 94, 0.12)' : 'var(--color-charcoal)',
-                      color: isChecked ? 'var(--color-pulse-green)' : 'var(--color-fog)',
-                      border: `1px solid ${isChecked ? 'rgba(34, 197, 94, 0.25)' : 'var(--color-graphite)'}`
+                      background: 'var(--color-charcoal)',
+                      color: isChecked ? 'var(--color-fog)' : 'var(--color-fog)',
+                      border: '1px solid var(--color-graphite)',
                     }}
                   >
-                    {block.minutes} mins
+                    {block.minutes}m
                   </span>
                   {isChecked && (
-                    <CheckCircle2 size={14} style={{ color: 'var(--color-pulse-green)' }} />
+                    <CheckCircle2
+                      size={14}
+                      style={{ color: 'var(--color-brand)', opacity: 0.8 }}
+                    />
                   )}
                 </div>
               </div>
@@ -571,28 +538,28 @@ export const OverviewView: React.FC = () => {
           })}
         </div>
 
-        {/* Bottom Fields: Hours Studied & Daily Reflections */}
+        {/* Hours & Notes */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: '16px',
-            paddingTop: '8px',
-            borderTop: '1px solid var(--color-graphite)'
+            paddingTop: '12px',
+            borderTop: '1px solid var(--color-graphite)',
           }}
         >
-          {/* Hours Studied Today */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {/* Hours Studied */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <label
               htmlFor="hours-studied-input"
-              style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-paper)' }}
+              style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-paper)' }}
             >
               Hours Studied Today
             </label>
             <div style={{ fontSize: '11px', color: 'var(--color-fog)' }}>
-              Record actual time invested (Target: 6.0 hours / day)
+              Target: 6.0 hrs / day
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
               <input
                 id="hours-studied-input"
                 type="number"
@@ -603,32 +570,32 @@ export const OverviewView: React.FC = () => {
                 onChange={handleHoursChange}
                 placeholder="e.g. 5.5"
                 style={{
-                  width: '110px',
-                  padding: '8px 12px',
+                  width: '100px',
+                  padding: '7px 11px',
                   background: 'var(--color-carbon)',
                   border: '1px solid var(--color-graphite)',
                   borderRadius: '6px',
                   color: 'var(--color-paper)',
-                  fontSize: '14px',
-                  fontFamily: 'inherit'
+                  fontSize: '13px',
+                  fontFamily: 'inherit',
                 }}
               />
-              <span className="font-mono tab-num" style={{ fontSize: '12px', color: 'var(--color-fog)' }}>
-                / 6.0 hrs daily target
+              <span className="font-mono tab-num" style={{ fontSize: '11.5px', color: 'var(--color-fog)' }}>
+                / 6.0 hrs
               </span>
             </div>
           </div>
 
-          {/* Daily Notes & Reflections */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {/* Daily Notes */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <label
               htmlFor="daily-notes-textarea"
-              style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-paper)' }}
+              style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-paper)' }}
             >
               Daily Notes & Reflections
             </label>
             <div style={{ fontSize: '11px', color: 'var(--color-fog)' }}>
-              Record learning progress, breakthroughs, or blockers encountered
+              Breakthroughs, blockers, or key learnings
             </div>
             <textarea
               id="daily-notes-textarea"
@@ -638,7 +605,7 @@ export const OverviewView: React.FC = () => {
               placeholder="What worked well, key breakthroughs or roadblocks today?"
               style={{
                 width: '100%',
-                padding: '10px 12px',
+                padding: '9px 11px',
                 background: 'var(--color-carbon)',
                 border: '1px solid var(--color-graphite)',
                 borderRadius: '6px',
@@ -648,12 +615,13 @@ export const OverviewView: React.FC = () => {
                 fontFamily: 'inherit',
                 resize: 'vertical',
                 boxSizing: 'border-box',
-                marginTop: '4px'
+                marginTop: '2px',
               }}
             />
           </div>
         </div>
-      </div>
+      </section>
+
     </div>
   );
 };

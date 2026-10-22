@@ -234,6 +234,101 @@ h3 {
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Interactive Hover Button (Animated Expanding-Dot CTA)
+   Default: yellow-lime bg, dark text.
+   Hover:   dark circle expands from left; text + arrow turn lime.
+═══════════════════════════════════════════════════════════════ */
+.kairo-ihb {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-buttons);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: #DFFF00;
+  color: #08090a;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  outline: none;
+}
+
+.kairo-ihb:focus-visible {
+  outline: 2px solid #DFFF00;
+  outline-offset: 2px;
+}
+
+.kairo-ihb:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.kairo-ihb:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Expanding dark dot — starts hidden, scales to 30× on hover */
+.kairo-ihb__dot {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0f1011;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.38s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kairo-ihb.is-hovered .kairo-ihb__dot {
+  transform: translate(-50%, -50%) scale(30);
+  opacity: 1;
+}
+
+/* Text + arrow sit above the dot via z-index */
+.kairo-ihb__content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.22s ease;
+  color: #08090a;
+}
+
+.kairo-ihb.is-hovered .kairo-ihb__content {
+  color: #DFFF00;
+}
+
+/* Arrow slides right on hover */
+.kairo-ihb__arrow {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kairo-ihb.is-hovered .kairo-ihb__arrow {
+  transform: translateX(3px);
+}
+
+/* Light-mode: lime is fine on white too */
+:root[data-theme="light"] .kairo-ihb {
+  background: #DFFF00;
+  color: #08090a;
+}
+
 /* Button Hierarchy */
 button {
   font-family: inherit;
@@ -670,6 +765,31 @@ input[type="checkbox"]:checked {
     margin-left: 0 !important;
     width: 100% !important;
     padding: calc(64px + env(safe-area-inset-top, 0px)) 16px 48px !important;
+  }
+}
+
+/* Track cards: collapse to 1 column below 700px */
+@media (max-width: 700px) {
+  .kairo-track-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Streak stats 4-col grid — collapse to 2 col on narrow viewports */
+@media (max-width: 640px) {
+  .kairo-streak-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .kairo-streak-stats > div:nth-child(2) {
+    border-right: none !important;
+  }
+  .kairo-streak-stats > div:nth-child(3) {
+    border-top: 1px solid var(--color-graphite);
+    padding-top: 14px;
+  }
+  .kairo-streak-stats > div:nth-child(4) {
+    border-top: 1px solid var(--color-graphite);
+    padding-top: 14px;
   }
 }
 

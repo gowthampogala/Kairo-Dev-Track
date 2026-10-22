@@ -86,6 +86,7 @@ export interface WeeklyReview {
 
 export interface StudyBlockEntry {
   dayKey: string; // `${blockId}:${day}`
+  date?: string; // YYYY-MM-DD
   checkedBlocks: boolean[]; // 5 blocks
   hoursStudied: number | string;
   notes: string;

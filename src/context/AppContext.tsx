@@ -19,6 +19,7 @@ import {
   createDefaultState
 } from '../services/storage';
 import { calculateCurrentPosition, CurrentPosition } from '../services/progress';
+import { getDateForStudyBlockKey } from '../services/streak';
 import { DEFAULT_PROJECTS } from '../data/curriculum';
 
 interface AppContextType {
@@ -597,8 +598,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Study blocks
   const toggleStudyBlock = useCallback((dayKey: string, blockIndex: number) => {
     setState(prev => {
+      const entryDate = getDateForStudyBlockKey(dayKey, prev.settings.startDate);
       const existing = prev.studyBlocks[dayKey] || {
         dayKey,
+        date: entryDate,
         checkedBlocks: [false, false, false, false, false],
         hoursStudied: '',
         notes: ''
@@ -613,6 +616,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...prev.studyBlocks,
           [dayKey]: {
             ...existing,
+            date: existing.date || entryDate,
             checkedBlocks: updatedChecked
           }
         }
@@ -622,8 +626,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setStudyHours = useCallback((dayKey: string, hours: string | number) => {
     setState(prev => {
+      const entryDate = getDateForStudyBlockKey(dayKey, prev.settings.startDate);
       const existing = prev.studyBlocks[dayKey] || {
         dayKey,
+        date: entryDate,
         checkedBlocks: [false, false, false, false, false],
         hoursStudied: '',
         notes: ''
@@ -634,6 +640,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...prev.studyBlocks,
           [dayKey]: {
             ...existing,
+            date: existing.date || entryDate,
             hoursStudied: hours
           }
         }
@@ -643,8 +650,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setStudyNotes = useCallback((dayKey: string, notes: string) => {
     setState(prev => {
+      const entryDate = getDateForStudyBlockKey(dayKey, prev.settings.startDate);
       const existing = prev.studyBlocks[dayKey] || {
         dayKey,
+        date: entryDate,
         checkedBlocks: [false, false, false, false, false],
         hoursStudied: '',
         notes: ''
@@ -655,6 +664,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...prev.studyBlocks,
           [dayKey]: {
             ...existing,
+            date: existing.date || entryDate,
             notes
           }
         }

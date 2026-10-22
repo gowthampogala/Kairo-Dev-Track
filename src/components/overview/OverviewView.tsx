@@ -1,14 +1,9 @@
-import React from 'react';
-import { ArrowRight, CheckCircle2, Calendar, Target, Award, Code2, FileCode, Play, Server, Sparkles, Network } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { ArrowRight, CheckCircle2, Calendar, Target, Award, Code2, FileCode, Play, Server, Sparkles, Network, Flame } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import {
-  calculateRoadmapProgress,
-  calculatePhaseProgress,
-  calculateBlockProgress,
-  getNextMilestone,
-  calculate7DayVelocity
-} from '../../services/progress';
 import { ROADMAP_BLOCKS, PHASES, formatWeekLabel } from '../../data/curriculum';
+import { calculateStreakStats } from '../../services/streak';
+import ContributionSkyline from '../ui/contribution-skyline';
 import { JS_CURRICULUM } from '../../data/javascriptCurriculum';
 import {
   SPRING_FRAMEWORK_MODULES,
@@ -33,17 +28,7 @@ export const OverviewView: React.FC = () => {
   const currentBlock = ROADMAP_BLOCKS[currentPosition.blockIndex];
   const currentPhase = PHASES[currentPosition.phaseIndex];
 
-  const overall = calculateRoadmapProgress(state);
-  const phaseProg = calculatePhaseProgress(state, currentPosition.phaseIndex);
-  const nextMilestone = getNextMilestone(state);
-  const velocity = calculate7DayVelocity(state);
-
-  // Active project
-  const activeProj = state.projects.find(p => p.status === 'in_progress') || state.projects.find(p => p.status !== 'done') || state.projects[0];
-
-  // Self-test for current block
-  const currentReview = state.weeklyReviews[currentPosition.blockIndex];
-  const selfTestStatus = currentReview?.selfTestResult === 'passed' ? 'Passed' : currentReview?.selfTestResult === 'needs_revision' ? 'Needs Revision' : 'Not taken';
+  const streakStats = useMemo(() => calculateStreakStats(state), [state]);
 
   // 5 Standard Study Blocks (360 mins = 6 hours)
   const STUDY_BLOCKS = [
@@ -393,99 +378,97 @@ export const OverviewView: React.FC = () => {
         </div>
       </div>
 
-      {/* Metrics Row (6 Compact Precision Cards) */}
-      <div className="metrics-grid">
-        {/* 1. Overall Roadmap */}
-        <div className="linear-card">
-          <div className="card-label">Overall roadmap</div>
-          <div className="card-big-value">{overall.percent}%</div>
-          <div className="linear-progress-bar">
-            <div className="linear-progress-bar-fill" style={{ width: `${overall.percent}%` }} />
-          </div>
-          <div className="font-mono tab-num" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '8px' }}>
-            {overall.completed} completed · {overall.total - overall.completed} remaining
-          </div>
-        </div>
-
-        {/* 2. Current Phase */}
-        <div className="linear-card">
-          <div className="card-label">Current phase</div>
-          <div className="card-big-value">{phaseProg.percent}%</div>
-          <div className="linear-progress-bar">
-            <div className="linear-progress-bar-fill" style={{ width: `${phaseProg.percent}%` }} />
-          </div>
-          <div className="font-mono tab-num" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '8px' }}>
-            {phaseProg.completed}/{phaseProg.total} phase tasks
-          </div>
-        </div>
-
-        {/* 3. Next Milestone */}
-        <div className="linear-card">
-          <div className="card-label">Next milestone</div>
-          <div style={{ color: 'var(--color-paper)', fontSize: '13px', fontWeight: 510, marginTop: '6px', lineHeight: 1.4 }}>
-            {nextMilestone ? nextMilestone.title : 'All deliverables completed!'}
-          </div>
-          {nextMilestone && (
-            <div className="font-mono" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '4px' }}>
-              {nextMilestone.weekSpan}
-            </div>
-          )}
-        </div>
-
-        {/* 4. Active Project */}
-        <div className="linear-card">
-          <div className="card-label">Current project</div>
-          <div style={{ color: 'var(--color-paper)', fontSize: '13px', fontWeight: 510, marginTop: '6px' }}>
-            {activeProj ? activeProj.title : 'No active project'}
-          </div>
-          <div className="font-mono" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '4px' }}>
-            {activeProj?.status === 'done' ? 'Completed' : activeProj?.status === 'in_progress' ? 'In progress' : 'Not started'}
-          </div>
-        </div>
-
-        {/* 5. Weekly Self-Test */}
-        <div className="linear-card">
-          <div className="card-label">Weekly self-test</div>
-          <div style={{ color: 'var(--color-paper)', fontSize: '13px', fontWeight: 510, marginTop: '6px' }}>
-            {currentBlock.selfTest ? selfTestStatus : 'No self-test this block'}
-          </div>
-          <div className="font-mono tab-num" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '4px' }}>
-            Block progress: {calculateBlockProgress(state, currentPosition.blockIndex).percent}%
-          </div>
-        </div>
-
-        {/* 6. Last 7 Days Activity */}
-        <div className="linear-card">
-          <div className="card-label">7-day task velocity</div>
-          <div style={{ display: 'flex', gap: '5px', alignItems: 'flex-end', height: '44px', marginTop: '8px' }}>
-            {velocity.counts.map((cnt, i) => (
-              <div
-                key={i}
-                title={`${velocity.days[i]}: ${cnt} tasks completed`}
+      {/* Learning Streak & Contribution Skyline Section */}
+      <div className="linear-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--color-paper)' }}>Learning Streak</h2>
+              <span
                 style={{
-                  flex: 1,
-                  height: '100%',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-badges)',
+                  background: 'var(--color-brand-subtle)',
+                  color: 'var(--color-brand-text)',
+                  border: '1px solid var(--color-brand-border)',
+                  fontWeight: 600,
                   display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-end'
+                  alignItems: 'center',
+                  gap: '5px'
                 }}
               >
-                <div
-                  style={{
-                    width: '100%',
-                    background: cnt > 0 ? 'var(--color-pulse-green)' : 'var(--color-smoke)',
-                    borderRadius: '2px',
-                    height: `${Math.max(6, (cnt / velocity.max) * 100)}%`,
-                    transition: 'all 0.2s ease'
-                  }}
-                />
-              </div>
-            ))}
+                <Flame size={13} style={{ color: 'var(--color-brand)' }} />
+                {streakStats.currentStreak > 0 ? `${streakStats.currentStreak}-Day Streak` : 'Streak Inactive'}
+              </span>
+            </div>
+            <div className="card-subtext" style={{ marginTop: '3px', fontSize: '13px' }}>
+              Complete 4 of 5 daily blocks to keep your streak.
+            </div>
           </div>
-          <div className="font-mono tab-num" style={{ fontSize: '11px', color: 'var(--color-fog)', marginTop: '6px' }}>
-            {velocity.totalThisWeek} tasks finished this week
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div className="font-mono tab-num" style={{ fontSize: '12px', color: 'var(--color-fog)', textAlign: 'right' }}>
+              <div>Range: <span style={{ color: 'var(--color-paper)' }}>{streakStats.dateRangeStr}</span></div>
+              <div style={{ marginTop: '2px' }}>
+                Today: <span style={{ color: streakStats.todayQualifies ? 'var(--color-brand-text)' : 'var(--color-paper)', fontWeight: 600 }}>
+                  {streakStats.todayCount}/5 blocks completed
+                  {streakStats.todayQualifies ? ' · Qualified' : ''}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* 4 Quick Metric Precision Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px' }}>
+          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
+            <div className="card-label">Current Streak</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-brand)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+              <span className="font-mono tab-num">{streakStats.currentStreak}</span>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>{streakStats.currentStreak === 1 ? 'day' : 'days'}</span>
+            </div>
+          </div>
+
+          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
+            <div className="card-label">Longest Streak</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-paper)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+              <span className="font-mono tab-num">{streakStats.longestStreak}</span>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>{streakStats.longestStreak === 1 ? 'day' : 'days'}</span>
+            </div>
+          </div>
+
+          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
+            <div className="card-label">Qualifying Days</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-paper)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+              <span className="font-mono tab-num">{streakStats.qualifyingDaysCount}</span>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>{streakStats.qualifyingDaysCount === 1 ? 'day' : 'days'}</span>
+            </div>
+          </div>
+
+          <div className="linear-card-obsidian" style={{ padding: '12px 14px' }}>
+            <div className="card-label">Blocks Completed</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-paper)', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+              <span className="font-mono tab-num">{streakStats.totalBlocksCount}</span>
+              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-fog)' }}>completed</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Skyline Heatmap Visualization */}
+        <ContributionSkyline
+          data={streakStats.activityDays}
+          defaultView="2d"
+          palette="kairo"
+          showStats={false}
+          showLegend={true}
+          showToggle={true}
+          unit="study block"
+          unitPlural="study blocks"
+          heightScale={1.1}
+          duration={650}
+        />
       </div>
 
       {/* Study Blocks & Daily Reflection */}
